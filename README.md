@@ -1,5 +1,24 @@
 # AdaAttN: Revisit Attention Mechanism in Arbitrary Neural Style Transfer
 
+## (子鈞) To use this:
+1. 把該裝的library都裝好（有點太多了，你可以等噴bug的時候再去裝）
+2. 下載pretrained model: 
+  - mkdir checkpoints
+  - download pretrained model from [Google Drive](https://drive.google.com/file/d/1XvpD1eI4JeCBIaW5uwMT6ojF_qlzM_lo/view?usp=sharing), move it to checkpoints directory, and unzip:
+
+      ```shell
+      mv [Download Directory]/AdaAttN_model.zip checkpoints/
+      unzip checkpoints/AdaAttN_model.zip
+      rm checkpoints/AdaAttN_model.zip
+      ```
+3. 這時候就可以用了，command是：
+    ```
+    python test.py --name ./AdaAttN_model/AdaAttN --model adaattn --dataset_mode unaligned --image_encoder_path checkpoints/AdaAttN_model/vgg_normalised.pth --gpu_ids 0 --skip_connection_3 --shallow_layer --content_path <path_to_content_img_dir> --style_path <path_to_style_img_dir>
+    ```
+    請記得把--gpus_ids換成-1，如果使用cpu的話  
+    注: <path_to_content_img_dir> 和 <path_to_style_img_dir> 都是directory name，不是filename，把所有想要用的content img和style img放入資料及内就能自動全部弄好
+
+
 > [[Paper](https://arxiv.org/abs/2108.03647)] [[PyTorch Implementation](https://github.com/Huage001/AdaAttN)] [[Paddle Implementation](https://github.com/PaddlePaddle/PaddleGAN)]
 
 <a href="https://replicate.ai/huage001/adaattn"><img src="https://img.shields.io/static/v1?label=Replicate&message=Demo and Docker Image&color=blue"></a>
