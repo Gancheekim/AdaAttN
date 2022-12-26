@@ -32,10 +32,55 @@ from data import create_dataset
 from models import create_model
 from util.visualizer import save_images
 from util import html
+import cv2
+import glob
+import matplotlib.pyplot as plt
+import numpy as np
+
+def makeVideo2(result_frames, output_filename, framerate):
+    # result_frames: list of numpy arrays (frame)
+    print('Stack transferred frames back to video...')
+    height,width,dim = result_frames[0].shape
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    video = cv2.VideoWriter(os.path.join(output_filename,'transfer.mp4'),fourcc,framerate,(width,height))
+    for j in range(len(result_frames)):
+        frame = result_frames[j] * 255.0
+        frame = frame.astype('uint8')
+        video.write(frame)
+    video.release()
+    print('Transferred video saved at %s.'%output_filename)
 
 
 if __name__ == '__main__':
     opt = TestOptions().parse()  # get test options
+
+    ######## use video transfer ########
+    use_video = opt.use_video
+    if use_video:
+        #### read video, save each frame to ./temp_vid_frame/ ###
+        temp_vid_frame_path = './temp_vid_frame/'
+        if not os.path.exists(temp_vid_frame_path):
+            os.makedirs(temp_vid_frame_path)
+        temp_dir = glob.glob(temp_vid_frame_path+'*')
+        # make sure to remove previous video's frame
+        for frames in temp_dir: 
+            os.remove(frames)
+
+        caps = cv2.VideoCapture(opt.video_name)
+        framerate = int(caps.get(5))
+
+        success, frame = caps.read()
+        count = 0
+        while success:
+            cv2.imwrite(f"{temp_vid_frame_path}{format(count,'05d')}.jpg", frame)     # save frame as JPEG file      
+            success, frame = caps.read()
+            count += 1
+            print(f'total frame read is {count}', end='\r')
+        
+        opt.content_path = temp_vid_frame_path
+        opt.num_test = count
+    ########################################
+
     # hard-code some parameters for test
     opt.num_threads = 0   # test code only supports num_threads = 0
     opt.batch_size = 1    # test code only supports batch_size = 1
@@ -50,20 +95,33 @@ if __name__ == '__main__':
     if opt.load_iter > 0:  # load_iter is 0 by default
         web_dir = '{:s}_iter{:d}'.format(web_dir, opt.load_iter)
     print('creating web directory', web_dir)
-    webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
+    if not use_video:
+        webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
     # test with eval mode. This only affects layers like batchnorm and dropout.
     # For [pix2pix]: we use batchnorm and dropout in the original pix2pix. You can experiment it with and without eval() mode.
     # For [CycleGAN]: It should not affect CycleGAN as CycleGAN uses instancenorm without dropout.
     if opt.eval:
         model.eval()
+    video_frame = []
     for i, data in enumerate(dataset):
-        if i >= opt.num_test:  # only apply our model to opt.num_test images.
-            break
+        # if i >= opt.num_test:  # only apply our model to opt.num_test images.
+            # break
         model.set_input(data)  # unpack data from data loader
         model.test()           # run inference
         visuals = model.get_current_visuals()  # get image results
-        img_path = model.get_image_paths()     # get image paths
-        if i % 5 == 0:  # save images to an HTML file
-            print('processing (%04d)-th image... %s' % (i, img_path))
-        save_images(webpage, visuals, img_path, width=opt.display_winsize)
-    webpage.save()  # save the HTML
+        if use_video:
+            visual_np = visuals['cs'].cpu().detach().numpy()
+            visual_np = np.transpose(np.squeeze(visual_np), (1,2,0))
+            print(f'processing {i}-th frame', end='\r')
+            video_frame.append(visual_np)
+
+        img_path = model.get_image_paths()     # get image paths`
+        if not use_video:
+            if i % 5 == 0:  # save images to an HTML file
+                print('processing (%04d)-th image... %s' % (i, img_path))
+            save_images(webpage, visuals, img_path, width=opt.display_winsize)
+    if not use_video:
+        webpage.save()  # save the HTML
+    
+    print(f'framerate is {framerate}')
+    makeVideo2(video_frame, './output_transfer_video/' , framerate)

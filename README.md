@@ -11,13 +11,18 @@
       unzip checkpoints/AdaAttN_model.zip
       rm checkpoints/AdaAttN_model.zip
       ```
-3. 這時候就可以用了，command是：
+3. 這時候就可以用了(image)，command是：
     ```
     python test.py --name ./AdaAttN_model/AdaAttN --model adaattn --dataset_mode unaligned --image_encoder_path checkpoints/AdaAttN_model/vgg_normalised.pth --gpu_ids 0 --skip_connection_3 --shallow_layer --content_path <path_to_content_img_dir> --style_path <path_to_style_img_dir>
     ```
     請記得把--gpus_ids換成-1，如果使用cpu的話  
     注: <path_to_content_img_dir> 和 <path_to_style_img_dir> 都是directory name，不是filename，把所有想要用的content img和style img放入資料及内就能自動全部弄好
-
+4. 如果要用video:  
+    ```
+    python test.py --name ./AdaAttN_model/AdaAttN --model adaattn --dataset_mode unaligned --image_encoder_path checkpoints/AdaAttN_model/vgg_normalised.pth --gpu_ids 0 --skip_connection_3 --shallow_layer --content_path ./ --style_path <path_to_style_img_dir> --use_video --video_name <path_to_video_name>
+    ```
+    請記得把--gpus_ids換成-1，如果使用cpu的話  
+    注1: <path_to_style_img_dir>是directory name, 但是裏面只能放一張圖，<path_to_video_name>是file name (.mp4) 不是directory name
 
 > [[Paper](https://arxiv.org/abs/2108.03647)] [[PyTorch Implementation](https://github.com/Huage001/AdaAttN)] [[Paddle Implementation](https://github.com/PaddlePaddle/PaddleGAN)]
 

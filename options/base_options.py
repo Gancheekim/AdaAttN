@@ -20,6 +20,8 @@ class BaseOptions():
     def initialize(self, parser):
         """Define the common options that are used in both training and test."""
         # basic parameters
+        parser.add_argument('--use_video', action='store_true')
+        parser.add_argument('--video_name', type=str)
         parser.add_argument('--content_path', type=str, help='path of content dataset',
                             default='./../../content_img/')
         parser.add_argument('--style_path', type=str, help='path of style dataset',
