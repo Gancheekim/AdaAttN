@@ -1,0 +1,11 @@
+opencv-python
+glob2
+matplotlib
+numpy
+torch
+requests
+bs4
+dominate
+pillow
+functools
+torchvision
